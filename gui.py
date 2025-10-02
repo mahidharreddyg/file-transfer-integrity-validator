@@ -131,11 +131,26 @@ class FileTransferGUI:
             self.status_label.config(text=f"Transferred {i}/{total_files} files")
             self.root.update_idletasks()
 
+        # Build report data
+        report_data = {}
+        for i, (src_file, dest_file) in enumerate(files, start=1):
+            rel_path = os.path.relpath(src_file, source)
+            if rel_path in missing:
+                report_data[rel_path] = "MISSING"
+            elif rel_path in corrupted:
+                report_data[rel_path] = "CORRUPTED"
+            else:
+                report_data[rel_path] = "OK"
+
+        from src import report_generator
+        reports = report_generator.generate_reports(report_data)
+
         # Final summary
         summary = (
             f"✅ Successful: {success_count}\n"
             f"⚠️ Corrupted: {len(corrupted)}\n"
-            f"❌ Failed/Missing: {len(missing)}"
+            f"❌ Failed/Missing: {len(missing)}\n\n"
+            f"Reports saved to:\n" + "\n".join(reports)
         )
         self.status_label.config(text="Transfer Complete")
         messagebox.showinfo("Transfer Summary", summary)
@@ -204,14 +219,30 @@ class FileTransferGUI:
         self.val_progress["maximum"] = 100
         self.val_progress["value"] = 100  # instantly fill for now
 
+        # Build report data
+        report_data = {}
+        for root, _, files in os.walk(source):
+            for name in files:
+                rel_path = os.path.relpath(os.path.join(root, name), source)
+                if rel_path in missing:
+                    report_data[rel_path] = "MISSING"
+                elif rel_path in corrupted:
+                    report_data[rel_path] = "CORRUPTED"
+                else:
+                    report_data[rel_path] = "OK"
+
+        from src import report_generator
+        reports = report_generator.generate_reports(report_data)
+
         # Summary popup
         summary = (
-            f"✅ Successful: All others\n"
             f"⚠️ Corrupted: {len(corrupted)}\n"
-            f"❌ Missing: {len(missing)}"
+            f"❌ Missing: {len(missing)}\n\n"
+            f"Reports saved to:\n" + "\n".join(reports)
         )
         self.val_status_label.config(text="Validation Complete")
         messagebox.showinfo("Validation Summary", summary)
+
 
         # Print details in terminal (for debugging)
         if missing:

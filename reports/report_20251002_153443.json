@@ -1,0 +1,6 @@
+{
+    "__init__.py": "OK",
+    "test_transfer.py": "OK",
+    "test_data/file1.txt": "OK",
+    "test_data/file2_corrupted.txt": "OK"
+}
