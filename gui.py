@@ -140,9 +140,89 @@ class FileTransferGUI:
         self.status_label.config(text="Transfer Complete")
         messagebox.showinfo("Transfer Summary", summary)
 
-    # ---------------- VALIDATION TAB ----------------
+        # ---------------- VALIDATION TAB ----------------
     def build_validation_tab(self):
-        ttk.Label(self.validation_tab, text="Validation Interface (Coming Soon)").pack(pady=20)
+        frame = self.validation_tab
+
+        # Source picker
+        self.val_source_var = tk.StringVar()
+        ttk.Label(frame, text="Source Folder:").pack(pady=5, anchor="w")
+        source_frame = ttk.Frame(frame)
+        source_frame.pack(fill="x", padx=10)
+        ttk.Entry(source_frame, textvariable=self.val_source_var, width=50).pack(side="left", fill="x", expand=True)
+        ttk.Button(source_frame, text="Browse", command=self.pick_val_source).pack(side="left", padx=5)
+
+        # Destination picker
+        self.val_dest_var = tk.StringVar()
+        ttk.Label(frame, text="Destination Folder:").pack(pady=5, anchor="w")
+        dest_frame = ttk.Frame(frame)
+        dest_frame.pack(fill="x", padx=10)
+        ttk.Entry(dest_frame, textvariable=self.val_dest_var, width=50).pack(side="left", fill="x", expand=True)
+        ttk.Button(dest_frame, text="Browse", command=self.pick_val_dest).pack(side="left", padx=5)
+
+        # Validate button
+        ttk.Button(frame, text="Validate Transfer", command=self.start_validation).pack(pady=15)
+
+        # Progress bar
+        self.val_progress = ttk.Progressbar(frame, length=500, mode="determinate")
+        self.val_progress.pack(pady=10)
+
+        # Status label
+        self.val_status_label = ttk.Label(frame, text="Status: Waiting")
+        self.val_status_label.pack(pady=5)
+
+    def pick_val_source(self):
+        folder = filedialog.askdirectory(title="Select Source Folder")
+        if folder:
+            self.val_source_var.set(folder)
+
+    def pick_val_dest(self):
+        folder = filedialog.askdirectory(title="Select Destination Folder")
+        if folder:
+            self.val_dest_var.set(folder)
+
+    def start_validation(self):
+        source = self.val_source_var.get()
+        dest = self.val_dest_var.get()
+
+        if not source or not dest:
+            messagebox.showerror("Error", "Please select both source and destination folders.")
+            return
+
+        threading.Thread(target=self.validate_folders, args=(source, dest), daemon=True).start()
+
+    def validate_folders(self, source, dest):
+        from src import transfer_validator
+
+        self.val_status_label.config(text="Status: Validating...")
+        self.val_progress["value"] = 0
+
+        # Run validation
+        missing, corrupted = transfer_validator.validate_transfer(source, dest)
+
+        total = len(missing) + len(corrupted)
+        self.val_progress["maximum"] = 100
+        self.val_progress["value"] = 100  # instantly fill for now
+
+        # Summary popup
+        summary = (
+            f"✅ Successful: All others\n"
+            f"⚠️ Corrupted: {len(corrupted)}\n"
+            f"❌ Missing: {len(missing)}"
+        )
+        self.val_status_label.config(text="Validation Complete")
+        messagebox.showinfo("Validation Summary", summary)
+
+        # Print details in terminal (for debugging)
+        if missing:
+            print("\n[MISSING FILES]")
+            for f in missing:
+                print(" -", f)
+        if corrupted:
+            print("\n[CORRUPTED FILES]")
+            for f in corrupted:
+                print(" -", f)
+
 
     # ---------------- SETTINGS TAB ----------------
     def build_settings_tab(self):
