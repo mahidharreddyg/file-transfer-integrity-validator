@@ -6,8 +6,11 @@ import os
 import shutil
 import webbrowser
 import glob
+import subprocess
 
 from src import checksum_utils, transfer_validator, config_manager, logger
+from src import chain_logger, watchdog_monitor, signing, report_generator   # ✅ added imports
+
 
 # GUI Application
 class FileTransferGUI:
@@ -24,8 +27,7 @@ class FileTransferGUI:
         self.root = root
         self.root.title("File Transfer Integrity Validator")
         self.root.geometry("780x480")
-        # Modern dark-ish look
-        self.root.configure(bg="#1e1e1e")
+        self.root.configure(bg="#1e1e1e")  # dark theme
 
         # Logger
         self.log = logger.get_logger()
@@ -41,7 +43,7 @@ class FileTransferGUI:
                 "log_level": "INFO"
             }
 
-        # ttk style (cleaner look)
+        # ttk style
         style = ttk.Style()
         try:
             style.theme_use("clam")
@@ -155,6 +157,13 @@ class FileTransferGUI:
         corrupted = []
         missing = []
 
+        from src import watchdog_monitor, chain_logger
+        def file_event(event, path):
+            self.log.info(f"Watchdog: {event} detected on {path}")
+            chain_logger.append_event("ALERT", f"File {event}: {path}")
+
+        self.observer = watchdog_monitor.start_monitor(dest, file_event)
+
         for i, (src_file, dest_file) in enumerate(files, start=1):
             try:
                 os.makedirs(os.path.dirname(dest_file), exist_ok=True)
@@ -201,6 +210,10 @@ class FileTransferGUI:
         formats = self.config.get("report_formats", ["html", "csv", "json"])
         reports = report_generator.generate_reports(report_data, formats=formats)
 
+        from src import signing
+        for r in reports: 
+            signing.sign_report_file(r)
+
         # Final summary
         summary = (
             f"✅ Successful: {success_count}\n"
@@ -216,13 +229,20 @@ class FileTransferGUI:
         self.log.info(f"Transfer Summary: Success={success_count}, Corrupted={len(corrupted)}, Missing={len(missing)}")
         messagebox.showinfo("Transfer Summary", summary)
 
+        from src import chain_logger
+        chain_logger.append_event(
+        "INFO",
+        f"Transfer completed: Success={success_count}, Corrupted={len(corrupted)}, Missing={len(missing)}"
+        )
+        if hasattr(self, "observer"):
+            watchdog_monitor.stop_monitor(self.observer)
+
     # ---------------- VALIDATION TAB ----------------
     def build_validation_tab(self):
         frame = self.validation_tab
-
         ttk.Label(frame, text="Validation", style="Header.TLabel").pack(pady=8, anchor="w", padx=10)
 
-        # Source picker
+        # source/dest pickers (same as your version)
         self.val_source_var = tk.StringVar()
         ttk.Label(frame, text="Source Folder:").pack(pady=(6, 2), anchor="w", padx=10)
         source_frame = ttk.Frame(frame)
@@ -230,7 +250,6 @@ class FileTransferGUI:
         ttk.Entry(source_frame, textvariable=self.val_source_var, width=60).pack(side="left", fill="x", expand=True)
         ttk.Button(source_frame, text="Browse", command=self.pick_val_source).pack(side="left", padx=6)
 
-        # Destination picker
         self.val_dest_var = tk.StringVar()
         ttk.Label(frame, text="Destination Folder:").pack(pady=(8, 2), anchor="w", padx=10)
         dest_frame = ttk.Frame(frame)
@@ -238,13 +257,11 @@ class FileTransferGUI:
         ttk.Entry(dest_frame, textvariable=self.val_dest_var, width=60).pack(side="left", fill="x", expand=True)
         ttk.Button(dest_frame, text="Browse", command=self.pick_val_dest).pack(side="left", padx=6)
 
-        # Controls
         ctrl_frame = ttk.Frame(frame)
         ctrl_frame.pack(fill="x", padx=10, pady=(12, 6))
         ttk.Button(ctrl_frame, text="Validate Transfer", command=self.start_validation).pack(side="left")
         ttk.Button(ctrl_frame, text="📂 Open Last Report", command=self.open_last_report).pack(side="left", padx=8)
 
-        # Progress and status
         self.val_progress = ttk.Progressbar(frame, length=640, mode="determinate")
         self.val_progress.pack(pady=(8, 6), padx=10)
         self.val_status_label = ttk.Label(frame, text="Status: Waiting", foreground="yellow")
@@ -263,25 +280,29 @@ class FileTransferGUI:
     def start_validation(self):
         source = self.val_source_var.get()
         dest = self.val_dest_var.get()
-
         if not source or not dest:
             messagebox.showerror("Error", "Please select both source and destination folders.")
             return
-
         threading.Thread(target=self.validate_folders, args=(source, dest), daemon=True).start()
 
     def validate_folders(self, source, dest):
         self.val_status_label.config(text="Status: Validating...", foreground="white")
         self.val_progress["value"] = 0
 
-        # Run validation (the transfer_validator will ignore hidden files if implemented)
+        def file_event(event, path):
+            self.log.info(f"Watchdog: {event} detected on {path}")
+            chain_logger.append_event("ALERT", f"File {event}: {path}")
+
+        # ✅ FIX: closed parenthesis
+        self.observer = watchdog_monitor.start_monitor(dest, file_event)
+
+        # Run validation
         missing, corrupted = transfer_validator.validate_transfer(source, dest)
 
-        # Fill progress (we don't track per-file progress here; instant visual feedback)
         self.val_progress["maximum"] = 100
         self.val_progress["value"] = 100
 
-        # Build report data (ignore hidden files)
+        # Build report data (ignore hidden)
         report_data = {}
         for root_dir, _, files in os.walk(source):
             for name in files:
@@ -295,23 +316,26 @@ class FileTransferGUI:
                 else:
                     report_data[rel_path] = "OK"
 
-        from src import report_generator
-        formats = self.config.get("report_formats", ["html", "csv", "json"])
-        reports = report_generator.generate_reports(report_data, formats=formats)
+        reports = report_generator.generate_reports(report_data, formats=self.config.get("report_formats", ["html", "csv", "json"]))
+        for r in reports:
+            signing.sign_report_file(r)
 
-        # Summary popup & log
         summary = (
             f"⚠️ Corrupted: {len(corrupted)}\n"
             f"❌ Missing: {len(missing)}\n\n"
             f"Reports saved to:\n" + "\n".join(reports)
         )
 
-        status_color = "green" if len(corrupted) == 0 and len(missing) == 0 else ("orange" if len(corrupted) > 0 else "red")
+        status_color = "green" if not corrupted and not missing else ("orange" if corrupted else "red")
         self.val_status_label.config(text="Validation Complete", foreground=status_color)
         self.log.info(f"Validation Summary: Corrupted={len(corrupted)}, Missing={len(missing)}")
         messagebox.showinfo("Validation Summary", summary)
 
-        # Print details in terminal (for debugging)
+        chain_logger.append_event("INFO", f"Validation completed: Corrupted={len(corrupted)}, Missing={len(missing)}")
+
+        if hasattr(self, "observer"):
+            watchdog_monitor.stop_monitor(self.observer)
+
         if missing:
             print("\n[MISSING FILES]")
             for f in missing:
@@ -340,6 +364,22 @@ class FileTransferGUI:
         )
         algo_dropdown.pack(pady=5, padx=10)
 
+        # Algorithm description box
+        self.algo_desc = tk.Text(frame, height=6, wrap="word", bg="#151515", fg="#dcdcdc")
+        self.algo_desc.pack(fill="x", padx=10, pady=(4, 8))
+        self.algo_desc.insert(tk.END, self.get_algo_description(self.checksum_var.get()))
+        self.algo_desc.config(state="disabled")
+
+        # Update description when selection changes
+        def on_algo_change(event):
+            algo = self.checksum_var.get()
+            desc = self.get_algo_description(algo)
+            self.algo_desc.config(state="normal")
+            self.algo_desc.delete(1.0, tk.END)
+            self.algo_desc.insert(tk.END, desc)
+            self.algo_desc.config(state="disabled")
+        algo_dropdown.bind("<<ComboboxSelected>>", on_algo_change)
+
         # ----- Report Format Selection -----
         ttk.Label(frame, text="Select Report Formats:").pack(pady=(10, 4), anchor="w", padx=10)
 
@@ -362,6 +402,33 @@ class FileTransferGUI:
         self.settings_status = ttk.Label(frame, text=current)
         self.settings_status.pack(pady=(0, 8), padx=10, anchor="w")
 
+    def get_algo_description(self, algo):
+        """Return a human-readable description for each checksum algorithm."""
+        descriptions = {
+            "md5": (
+                "MD5 (128-bit): Fast but insecure.\n"
+                "- Vulnerable to collisions\n"
+                "- Use only for quick, non-critical checks\n"
+                "- NOT recommended for security"
+            ),
+            "sha1": (
+                "SHA-1 (160-bit): Slightly stronger than MD5 but also broken.\n"
+                "- Practical collision attacks exist\n"
+                "- Avoid for security use"
+            ),
+            "sha256": (
+                "SHA-256 (256-bit): Secure and widely used.\n"
+                "- Good balance of speed and strength\n"
+                "- Recommended for file integrity validation"
+            ),
+            "sha512": (
+                "SHA-512 (512-bit): Very strong but slower.\n"
+                "- Best for high-security needs\n"
+                "- Suitable for large files or compliance requirements"
+            )
+        }
+        return descriptions.get(algo, "No description available.")
+
     def save_settings(self):
         # Save checksum algorithm
         new_algo = self.checksum_var.get()
@@ -369,7 +436,6 @@ class FileTransferGUI:
 
         # Save report formats
         selected_formats = [fmt for fmt, var in self.report_vars.items() if var.get()]
-        # if none selected, default to html
         if not selected_formats:
             selected_formats = ["html"]
         self.config["report_formats"] = selected_formats

@@ -15,3 +15,15 @@
 2025-10-02 16:41:11,801 - INFO - Validation Summary: Corrupted=1, Missing=0
 2025-10-02 16:41:22,336 - INFO - Validation Summary: Corrupted=0, Missing=1
 2025-10-02 17:15:23,981 - INFO - Transfer Summary: Success=7, Corrupted=0, Missing=0
+2025-10-02 18:31:00,937 - INFO - Transfer Summary: Success=1, Corrupted=0, Missing=0
+2025-10-02 19:02:12,080 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/file1.txt
+2025-10-02 19:02:12,148 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_src/hello.txt
+2025-10-02 19:02:12,160 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src_corrupt/data.txt
+2025-10-02 19:02:12,171 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src_corrupt/data.txt
+2025-10-02 19:02:12,182 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_dst/hello.txt
+2025-10-02 19:02:12,587 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/dst_corrupt/data.txt
+2025-10-02 19:02:12,588 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/important.txt
+2025-10-02 19:02:12,887 - INFO - Transfer Summary: Success=6, Corrupted=0, Missing=0
+2025-10-02 19:03:17,682 - INFO - Validation Summary: Corrupted=1, Missing=0
+2025-10-02 19:03:40,734 - INFO - Validation Summary: Corrupted=0, Missing=4
+2025-10-02 19:08:17,066 - INFO - Settings updated: checksum_algorithm=sha512, report_formats=['html']

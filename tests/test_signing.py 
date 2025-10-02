@@ -1,0 +1,22 @@
+import unittest, os
+from src import signing
+
+class SigningTests(unittest.TestCase):
+    def setUp(self):
+        os.makedirs("keys", exist_ok=True)
+        if not (os.path.exists("keys/private.pem") and os.path.exists("keys/public.pem")):
+            import subprocess
+            subprocess.run(["python3", "scripts/generate_keys.py"], check=True)
+
+    def test_sign_and_verify(self):
+        test_file = "tests/tmp.txt"
+        with open(test_file, "w") as f:
+            f.write("hello world")
+        sig = signing.sign_report_file(test_file)
+        self.assertTrue(os.path.exists(sig))
+        self.assertTrue(signing.verify_signature("keys/public.pem", test_file, sig))
+
+        # Tamper
+        with open(test_file, "a") as f:
+            f.write("tamper")
+        self.assertFalse(signing.verify_signature("keys/public.pem", test_file, sig))
