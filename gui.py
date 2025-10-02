@@ -4,12 +4,28 @@ import threading
 import os
 import shutil
 from src import checksum_utils, transfer_validator, config_manager
+import webbrowser
+import glob
+from src import logger
+
+
 
 class FileTransferGUI:
+    def open_last_report(self):
+      """Open the latest HTML report in the default browser."""
+      report_files = glob.glob("reports/*.html")
+      if not report_files:
+          messagebox.showwarning("No Reports", "No HTML reports found in /reports folder.")
+          return
+      latest_report = max(report_files, key=os.path.getctime)
+      webbrowser.open(f"file://{os.path.abspath(latest_report)}")
+
     def __init__(self, root):
         self.root = root
         self.root.title("File Transfer Integrity Validator")
         self.root.geometry("700x400")
+
+        self.log = logger.get_logger()
 
         # Load config
         self.config = config_manager.load_config()
@@ -65,6 +81,10 @@ class FileTransferGUI:
         # Status label
         self.status_label = ttk.Label(frame, text="Status: Waiting")
         self.status_label.pack(pady=5)
+
+        # Open Last Report button
+        ttk.Button(frame, text="📂 Open Last Report", command=self.open_last_report).pack(pady=5)
+
 
     def pick_source(self):
         folder = filedialog.askdirectory(title="Select Source Folder")
@@ -155,6 +175,9 @@ class FileTransferGUI:
         self.status_label.config(text="Transfer Complete")
         messagebox.showinfo("Transfer Summary", summary)
 
+        self.log.info(f"Transfer Summary: Success={success_count}, Corrupted={len(corrupted)}, Missing={len(missing)}")
+
+
         # ---------------- VALIDATION TAB ----------------
     def build_validation_tab(self):
         frame = self.validation_tab
@@ -185,6 +208,10 @@ class FileTransferGUI:
         # Status label
         self.val_status_label = ttk.Label(frame, text="Status: Waiting")
         self.val_status_label.pack(pady=5)
+
+        # Open Last Report button
+        ttk.Button(frame, text="📂 Open Last Report", command=self.open_last_report).pack(pady=5)
+
 
     def pick_val_source(self):
         folder = filedialog.askdirectory(title="Select Source Folder")
@@ -243,6 +270,9 @@ class FileTransferGUI:
         self.val_status_label.config(text="Validation Complete")
         messagebox.showinfo("Validation Summary", summary)
 
+        self.log.info(f"Validation Summary: Corrupted={len(corrupted)}, Missing={len(missing)}")
+
+
 
         # Print details in terminal (for debugging)
         if missing:
@@ -261,7 +291,27 @@ class FileTransferGUI:
 
     # ---------------- LOGS TAB ----------------
     def build_logs_tab(self):
-        ttk.Label(self.logs_tab, text="Logs Viewer (Coming Soon)").pack(pady=20)
+        frame = self.logs_tab
+
+        ttk.Label(frame, text="Application Logs").pack(pady=5)
+
+        self.log_text = tk.Text(frame, wrap="word", height=15, state="disabled")
+        self.log_text.pack(expand=True, fill="both", padx=10, pady=10)
+
+        ttk.Button(frame, text="🔄 Refresh Logs", command=self.load_logs).pack(pady=5)
+
+    def load_logs(self):
+        try:
+            with open("logs/app.log", "r") as f:
+                content = f.read()
+        except FileNotFoundError:
+            content = "No logs found yet."
+
+        self.log_text.config(state="normal")
+        self.log_text.delete(1.0, tk.END)
+        self.log_text.insert(tk.END, content)
+        self.log_text.config(state="disabled")
+
 
 
 if __name__ == "__main__":
