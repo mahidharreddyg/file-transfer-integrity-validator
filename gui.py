@@ -163,7 +163,7 @@ class FileTransferGUI:
                 report_data[rel_path] = "OK"
 
         from src import report_generator
-        reports = report_generator.generate_reports(report_data)
+        reports = report_generator.generate_reports(report_data, formats=self.config.get("report_formats", ["html", "csv", "json"]))
 
         # Final summary
         summary = (
@@ -259,7 +259,7 @@ class FileTransferGUI:
                     report_data[rel_path] = "OK"
 
         from src import report_generator
-        reports = report_generator.generate_reports(report_data)
+        reports = report_generator.generate_reports(report_data, formats=self.config.get("report_formats", ["html", "csv", "json"]))
 
         # Summary popup
         summary = (
@@ -287,7 +287,67 @@ class FileTransferGUI:
 
     # ---------------- SETTINGS TAB ----------------
     def build_settings_tab(self):
-        ttk.Label(self.settings_tab, text="Settings Panel (Coming Soon)").pack(pady=20)
+        frame = self.settings_tab
+
+        ttk.Label(frame, text="Settings", font=("Arial", 14)).pack(pady=10)
+
+        # ----- Checksum Algorithm -----
+        ttk.Label(frame, text="Select Checksum Algorithm:").pack(pady=5, anchor="w")
+
+        self.checksum_var = tk.StringVar(value=self.config.get("checksum_algorithm", "sha256"))
+        algo_dropdown = ttk.Combobox(
+            frame,
+            textvariable=self.checksum_var,
+            values=["md5", "sha1", "sha256", "sha512"],
+            state="readonly",
+            width=20
+        )
+        algo_dropdown.pack(pady=5)
+
+        # ----- Report Format Selection -----
+        ttk.Label(frame, text="Select Report Formats:").pack(pady=10, anchor="w")
+
+        self.report_vars = {
+            "html": tk.BooleanVar(value="html" in self.config.get("report_formats", [])),
+            "csv": tk.BooleanVar(value="csv" in self.config.get("report_formats", [])),
+            "json": tk.BooleanVar(value="json" in self.config.get("report_formats", [])),
+        }
+
+        for fmt, var in self.report_vars.items():
+            ttk.Checkbutton(frame, text=fmt.upper(), variable=var).pack(anchor="w", padx=20)
+
+        # Save button
+        ttk.Button(frame, text="Save Settings", command=self.save_settings).pack(pady=10)
+
+        # Status
+        self.settings_status = ttk.Label(frame, text="Current Algorithm: " + self.checksum_var.get())
+        self.settings_status.pack(pady=5)
+
+    def save_settings(self):
+        # Save checksum algorithm
+        new_algo = self.checksum_var.get()
+        self.config["checksum_algorithm"] = new_algo
+
+        # Save report formats
+        selected_formats = [fmt for fmt, var in self.report_vars.items() if var.get()]
+        self.config["report_formats"] = selected_formats
+
+        # Write to settings.json
+        config_manager.save_config(self.config)
+
+        # Update status
+        self.settings_status.config(
+            text=f"Algorithm: {new_algo}, Reports: {', '.join(selected_formats)}"
+        )
+
+        # Log the change
+        self.log.info(
+            f"Settings updated: checksum_algorithm={new_algo}, report_formats={selected_formats}"
+        )
+
+        messagebox.showinfo("Settings Saved", f"Saved algorithm={new_algo}, reports={', '.join(selected_formats)}")
+
+
 
     # ---------------- LOGS TAB ----------------
     def build_logs_tab(self):

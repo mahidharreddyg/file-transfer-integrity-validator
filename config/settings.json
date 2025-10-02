@@ -1,5 +1,7 @@
 {
-  "checksum_algorithm": "sha256",
-  "report_formats": ["html", "csv", "json"],
-  "log_level": "INFO"
+    "checksum_algorithm": "md5",
+    "report_formats": [
+        "html"
+    ],
+    "log_level": "INFO"
 }
