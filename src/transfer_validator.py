@@ -8,6 +8,8 @@ def validate_transfer(source, destination, algorithm="sha256"):
 
     for root, _, files in os.walk(source):
         for name in files:
+            if name.startswith("."): 
+              continue
             src_file = os.path.join(root, name)
             rel_path = os.path.relpath(src_file, source)
             dest_file = os.path.join(destination, rel_path)
