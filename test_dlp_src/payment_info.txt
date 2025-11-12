@@ -1,0 +1,3 @@
+Customer payment information:
+Credit Card: 4532-1234-5678-9010
+SSN: 123-45-6789

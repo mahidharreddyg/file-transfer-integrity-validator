@@ -1,0 +1,2 @@
+Second test file with different content.
+Used for checksum comparison testing.

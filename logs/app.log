@@ -27,3 +27,78 @@
 2025-10-02 19:03:17,682 - INFO - Validation Summary: Corrupted=1, Missing=0
 2025-10-02 19:03:40,734 - INFO - Validation Summary: Corrupted=0, Missing=4
 2025-10-02 19:08:17,066 - INFO - Settings updated: checksum_algorithm=sha512, report_formats=['html']
+2025-10-02 21:58:36,308 - INFO - Chain verification success: Chain log file not found (fresh system).
+2025-10-02 21:59:20,198 - INFO - Validation Summary: Corrupted=0, Missing=4
+2025-10-02 21:59:30,444 - INFO - Chain verification success: Chain verified: 1 entries, no tampering detected.
+2025-11-09 15:46:11,598 - INFO - DLP settings updated by admin
+2025-11-09 15:47:00,707 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt - Sensitive data found in file
+2025-11-09 15:47:06,373 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf - Transfer blocked: Restricted file type (.pdf)
+2025-11-09 15:47:08,637 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt - Sensitive data found in file
+2025-11-09 15:47:09,643 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx - Transfer blocked: Restricted file type (.docx)
+2025-11-09 15:47:10,479 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt - Transfer blocked: File name matches restricted pattern (secret)
+2025-11-09 15:47:11,280 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt - Transfer blocked: File name matches restricted pattern (confidential)
+2025-11-09 15:47:12,200 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-09 15:47:12,201 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-09 15:47:12,350 - INFO - Transfer Summary: Success=1, Blocked=6, Corrupted=0, Missing=0
+2025-11-09 15:58:14,880 - INFO - Test files reset from GUI
+2025-11-09 21:51:49,968 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/file1.txt
+2025-11-09 21:51:49,972 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/file1.txt
+2025-11-09 21:51:50,172 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_src/hello.txt
+2025-11-09 21:51:50,172 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_src/hello.txt
+2025-11-09 21:51:50,368 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src_corrupt/data.txt
+2025-11-09 21:51:50,369 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src_corrupt/data.txt
+2025-11-09 21:51:50,572 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_dst/hello.txt
+2025-11-09 21:51:50,572 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/gui_dst/hello.txt
+2025-11-09 21:51:50,762 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/dst_corrupt/data.txt
+2025-11-09 21:51:50,763 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/dst_corrupt/data.txt
+2025-11-09 21:51:50,965 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/file2.txt
+2025-11-09 21:51:50,965 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/file2.txt
+2025-11-09 21:51:51,167 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/file1.txt
+2025-11-09 21:51:51,168 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/file1.txt
+2025-11-09 21:51:51,379 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/important.txt
+2025-11-09 21:51:51,380 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/important.txt
+2025-11-09 21:51:51,581 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/document.txt
+2025-11-09 21:51:51,581 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/document.txt
+2025-11-09 21:51:51,769 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/data.txt
+2025-11-09 21:51:51,769 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_transfer/src/data.txt
+2025-11-09 21:51:52,061 - INFO - Transfer Summary: Success=10, Blocked=0, Corrupted=0, Missing=0
+2025-11-09 21:55:39,309 - INFO - Validation Summary: Corrupted=1, Missing=4
+2025-11-09 21:56:27,371 - INFO - Validation Summary: Corrupted=0, Missing=7
+2025-11-09 21:57:00,772 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt - Sensitive data found in file
+2025-11-09 21:57:03,769 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf - Transfer blocked: Restricted file type (.pdf)
+2025-11-09 21:57:05,601 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt - Sensitive data found in file
+2025-11-09 21:57:06,466 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx - Transfer blocked: Restricted file type (.docx)
+2025-11-09 21:57:07,212 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt - Transfer blocked: File name matches restricted pattern (secret)
+2025-11-09 21:57:08,160 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt - Transfer blocked: File name matches restricted pattern (confidential)
+2025-11-09 21:57:09,129 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-09 21:57:09,129 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-09 21:57:09,261 - INFO - Transfer Summary: Success=1, Blocked=6, Corrupted=0, Missing=0
+2025-11-09 21:57:16,854 - INFO - Validation Summary: Corrupted=0, Missing=6
+2025-11-09 21:57:32,448 - INFO - Chain verification success: Chain verified: 43 entries, no tampering detected.
+2025-11-09 22:53:15,491 - INFO - Chain verification success: Chain verified: 43 entries, no tampering detected.
+2025-11-09 22:54:07,683 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt - Sensitive data found in file
+2025-11-09 22:54:10,143 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf - Transfer blocked: Restricted file type (.pdf)
+2025-11-09 22:54:11,024 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt - Sensitive data found in file
+2025-11-09 22:54:11,806 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx - Transfer blocked: Restricted file type (.docx)
+2025-11-09 22:54:12,520 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt - Transfer blocked: File name matches restricted pattern (secret)
+2025-11-09 22:54:13,259 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt - Transfer blocked: File name matches restricted pattern (confidential)
+2025-11-09 22:54:14,038 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-09 22:54:14,150 - INFO - Transfer Summary: Success=1, Blocked=6, Corrupted=0, Missing=0
+2025-11-10 09:30:42,525 - INFO - Chain verification success: Chain verified: 51 entries, no tampering detected.
+2025-11-10 09:33:30,823 - INFO - Chain verification success: Chain verified: 51 entries, no tampering detected.
+2025-11-10 09:34:05,270 - ERROR - Chain verification failed: Broken chain at entry 49 (prev_hash mismatch)
+2025-11-10 09:34:08,052 - INFO - Chain verification success: Chain verified: 51 entries, no tampering detected.
+2025-11-10 09:35:53,037 - INFO - Validation Summary: Corrupted=0, Missing=6
+2025-11-10 10:02:05,661 - INFO - DLP test files reset from GUI
+2025-11-10 10:06:19,440 - ERROR - Chain verification failed: Corrupted JSON at line 48
+2025-11-10 10:06:31,122 - INFO - Chain verification success: Chain verified: 52 entries, no tampering detected.
+2025-11-10 10:06:39,492 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt - Sensitive data found in file
+2025-11-10 10:06:53,498 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf - Transfer blocked: Restricted file type (.pdf)
+2025-11-10 10:06:54,489 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt - Sensitive data found in file
+2025-11-10 10:06:55,297 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx - Transfer blocked: Restricted file type (.docx)
+2025-11-10 10:06:56,112 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt - Transfer blocked: File name matches restricted pattern (secret)
+2025-11-10 10:06:56,945 - WARNING - DLP BLOCK: /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt - Transfer blocked: File name matches restricted pattern (confidential)
+2025-11-10 10:06:57,888 - INFO - Watchdog: created detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-10 10:06:57,889 - INFO - Watchdog: modified detected on /Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst/normal_file.txt
+2025-11-10 10:06:58,061 - INFO - Transfer Summary: Success=1, Blocked=6, Corrupted=0, Missing=0
+2025-11-10 15:22:09,896 - INFO - Chain verification success: Chain verified: 61 entries, no tampering detected.

@@ -1,1 +1,2 @@
-Critical content
+Important file content.
+This file should be validated after transfer.

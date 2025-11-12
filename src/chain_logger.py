@@ -1,47 +1,61 @@
-import os, json, hashlib, time
+import os
+import json
+import hashlib
+from datetime import datetime
 
-CHAIN_FILE = os.path.join("logs", "chain.log")
-os.makedirs("logs", exist_ok=True)
+CHAIN_LOG_FILE = "logs/chain.log"
 
-def _sha256(b: bytes) -> str:
-    return hashlib.sha256(b).hexdigest()
+def _get_last_hash():
+    if not os.path.exists(CHAIN_LOG_FILE):
+        return "0" * 64  # genesis hash
+    with open(CHAIN_LOG_FILE, "r") as f:
+        lines = f.readlines()
+        if not lines:
+            return "0" * 64
+        last_entry = json.loads(lines[-1])
+        return last_entry["hash"]
 
-def append_event(level: str, message: str):
-    """Append a log entry with hash chaining for tamper detection."""
-    prev_hash = ""
-    if os.path.exists(CHAIN_FILE):
+def append_event(level, message):
+    os.makedirs("logs", exist_ok=True)
+    last_hash = _get_last_hash()
+    timestamp = datetime.utcnow().isoformat()
+    data = f"{last_hash}|{timestamp}|{level}|{message}"
+    new_hash = hashlib.sha256(data.encode()).hexdigest()
+
+    entry = {
+        "timestamp": timestamp,
+        "level": level,
+        "message": message,
+        "prev_hash": last_hash,
+        "hash": new_hash
+    }
+
+    with open(CHAIN_LOG_FILE, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+
+def verify_chain():
+    """Verify the entire chain log for tampering."""
+    if not os.path.exists(CHAIN_LOG_FILE):
+        return True, "Chain log file not found (fresh system)."
+
+    with open(CHAIN_LOG_FILE, "r") as f:
+        lines = f.readlines()
+
+    prev_hash = "0" * 64
+    for i, line in enumerate(lines, start=1):
         try:
-            with open(CHAIN_FILE, "r") as f:
-                lines = [l.strip() for l in f if l.strip()]
-                if lines:
-                    last = json.loads(lines[-1])
-                    prev_hash = last.get("entry_hash", "")
-        except Exception:
-            prev_hash = ""
-
-    timestamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
-    entry = {"ts": timestamp, "level": level, "msg": message, "prev_hash": prev_hash}
-    blob = json.dumps(entry, sort_keys=True).encode()
-    entry_hash = _sha256(blob)
-    entry["entry_hash"] = entry_hash
-
-    with open(CHAIN_FILE, "a") as fw:
-        fw.write(json.dumps(entry) + "\n")
-
-    return entry_hash
-
-def verify_chain() -> bool:
-    """Verify all entries form a valid chain."""
-    if not os.path.exists(CHAIN_FILE):
-        return True
-    prev = ""
-    with open(CHAIN_FILE, "r") as f:
-        for line in f:
             entry = json.loads(line)
-            if entry.get("prev_hash") != prev:
-                return False
-            blob = json.dumps({k: entry[k] for k in entry if k != "entry_hash"}, sort_keys=True).encode()
-            if _sha256(blob) != entry["entry_hash"]:
-                return False
-            prev = entry["entry_hash"]
-    return True
+        except json.JSONDecodeError:
+            return False, f"Corrupted JSON at line {i}"
+
+        data = f"{entry['prev_hash']}|{entry['timestamp']}|{entry['level']}|{entry['message']}"
+        expected_hash = hashlib.sha256(data.encode()).hexdigest()
+
+        if entry["prev_hash"] != prev_hash:
+            return False, f"Broken chain at entry {i} (prev_hash mismatch)"
+        if entry["hash"] != expected_hash:
+            return False, f"Tampering detected at entry {i} (hash mismatch)"
+
+        prev_hash = entry["hash"]
+
+    return True, f"Chain verified: {len(lines)} entries, no tampering detected."

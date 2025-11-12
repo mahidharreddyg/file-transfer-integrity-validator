@@ -3,5 +3,63 @@
     "report_formats": [
         "html"
     ],
-    "log_level": "INFO"
+    "log_level": "INFO",
+    "user_role": "admin",
+    "dlp_policies": {
+        "enabled": true,
+        "restricted_extensions": [
+            ".pdf",
+            ".docx",
+            ".xlsx"
+        ],
+        "restricted_patterns": [
+            "confidential",
+            "secret",
+            "private"
+        ],
+        "restricted_directories": [],
+        "allowed_destinations": [],
+        "blocked_destinations": []
+    },
+    "content_inspection": {
+        "enabled": true,
+        "sensitive_keywords": [
+            "password",
+            "confidential",
+            "private key",
+            "secret",
+            "api key",
+            "access token"
+        ],
+        "sensitive_patterns": [
+            "\\bpassword\\s*[:=]\\s*\\S+",
+            "\\bconfidential\\b",
+            "\\bprivate\\s+key\\b"
+        ],
+        "enabled_data_types": [
+            "credit_card",
+            "ssn"
+        ]
+    },
+    "encryption": {
+        "enabled": true,
+        "encrypt_extensions": [
+            ".pdf",
+            ".docx",
+            ".xlsx"
+        ],
+        "encrypt_patterns": [
+            "confidential",
+            "secret"
+        ]
+    },
+    "alerts": {
+        "desktop_notifications": true,
+        "email_enabled": false,
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "smtp_user": "",
+        "smtp_password": "",
+        "email_recipients": []
+    }
 }

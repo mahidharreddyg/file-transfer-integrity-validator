@@ -1,0 +1,246 @@
+[
+  {
+    "timestamp": "2025-11-09T15:47:00.709259",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Credit Card detected (1 matches)",
+        "Ssn detected (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T15:47:06.374787",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf",
+    "reason": "Transfer blocked: Restricted file type (.pdf)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T15:47:08.637730",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Sensitive keyword found: 'password'",
+        "Sensitive keyword found: 'secret'",
+        "Sensitive pattern matched: '\\bpassword\\s*[:=]\\s*\\S+' (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T15:47:09.643585",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx",
+    "reason": "Transfer blocked: Restricted file type (.docx)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T15:47:10.480153",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (secret)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T15:47:11.281572",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (confidential)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:00.773672",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Credit Card detected (1 matches)",
+        "Ssn detected (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:03.770702",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf",
+    "reason": "Transfer blocked: Restricted file type (.pdf)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:05.601847",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Sensitive keyword found: 'password'",
+        "Sensitive keyword found: 'secret'",
+        "Sensitive pattern matched: '\\bpassword\\s*[:=]\\s*\\S+' (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:06.467579",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx",
+    "reason": "Transfer blocked: Restricted file type (.docx)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:07.212913",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (secret)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T21:57:08.161639",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (confidential)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:07.685960",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Credit Card detected (1 matches)",
+        "Ssn detected (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:10.144769",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf",
+    "reason": "Transfer blocked: Restricted file type (.pdf)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:11.025387",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Sensitive keyword found: 'password'",
+        "Sensitive keyword found: 'secret'",
+        "Sensitive pattern matched: '\\bpassword\\s*[:=]\\s*\\S+' (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:11.806675",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx",
+    "reason": "Transfer blocked: Restricted file type (.docx)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:12.521337",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (secret)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-09T22:54:13.259895",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (confidential)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:39.493171",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/payment_info.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Credit Card detected (1 matches)",
+        "Ssn detected (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:53.499528",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/document.pdf",
+    "reason": "Transfer blocked: Restricted file type (.pdf)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:54.489933",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/config.txt",
+    "reason": "Sensitive data found in file",
+    "type": "BLOCK",
+    "details": {
+      "findings": [
+        "Sensitive keyword found: 'password'",
+        "Sensitive keyword found: 'secret'",
+        "Sensitive pattern matched: '\\bpassword\\s*[:=]\\s*\\S+' (1 matches)"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:55.298246",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/sensitive_data.docx",
+    "reason": "Transfer blocked: Restricted file type (.docx)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:56.113317",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/secret_notes.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (secret)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  },
+  {
+    "timestamp": "2025-11-10T10:06:56.945782",
+    "filepath": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_src/confidential_report.txt",
+    "reason": "Transfer blocked: File name matches restricted pattern (confidential)",
+    "type": "BLOCK",
+    "details": {
+      "destination": "/Users/mahidharreddyg/Mahi/My Projects/Web Dev/file-transfer-integrity-validator/test_dlp_dst"
+    }
+  }
+]

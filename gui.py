@@ -10,6 +10,7 @@ import subprocess
 
 from src import checksum_utils, transfer_validator, config_manager, logger
 from src import chain_logger, watchdog_monitor, signing, report_generator   # ✅ added imports
+from src import policy_engine, content_inspector, alert_system, encryption, dlp_tracker
 
 
 # GUI Application
@@ -25,8 +26,8 @@ class FileTransferGUI:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("File Transfer Integrity Validator")
-        self.root.geometry("780x480")
+        self.root.title("File Transfer Integrity Validator - DLP System")
+        self.root.geometry("1000x600")
         self.root.configure(bg="#1e1e1e")  # dark theme
 
         # Logger
@@ -40,8 +41,19 @@ class FileTransferGUI:
             self.config = {
                 "checksum_algorithm": "sha256",
                 "report_formats": ["html", "csv", "json"],
-                "log_level": "INFO"
+                "log_level": "INFO",
+                "user_role": "user"
             }
+        
+        # Initialize DLP components
+        self.policy_engine = policy_engine.PolicyEngine(self.config)
+        self.content_inspector = content_inspector.ContentInspector(self.config)
+        self.alert_system = alert_system.AlertSystem(self.config)
+        self.encryption_manager = encryption.EncryptionManager()
+        self.dlp_tracker = dlp_tracker.DLPTracker()
+        
+        # Get user role
+        self.user_role = self.config.get("user_role", "user")
 
         # ttk style
         style = ttk.Style()
@@ -70,12 +82,17 @@ class FileTransferGUI:
         notebook.add(self.validation_tab, text="Validation")
         notebook.add(self.settings_tab, text="Settings")
         notebook.add(self.logs_tab, text="Logs")
+        
+        # Add DLP Dashboard tab
+        self.dlp_tab = ttk.Frame(notebook)
+        notebook.add(self.dlp_tab, text="DLP Dashboard")
 
         # Build tabs
         self.build_transfer_tab()
         self.build_validation_tab()
         self.build_settings_tab()
         self.build_logs_tab()
+        self.build_dlp_tab()
 
     # ---------------- FILE TRANSFER TAB ----------------
     def build_transfer_tab(self):
@@ -156,6 +173,7 @@ class FileTransferGUI:
         success_count = 0
         corrupted = []
         missing = []
+        blocked = []  # DLP blocked files
 
         from src import watchdog_monitor, chain_logger
         def file_event(event, path):
@@ -165,30 +183,78 @@ class FileTransferGUI:
         self.observer = watchdog_monitor.start_monitor(dest, file_event)
 
         for i, (src_file, dest_file) in enumerate(files, start=1):
+            rel_path = os.path.relpath(src_file, source)
+            
+            # DLP Policy Check
+            if self.policy_engine.is_policy_enabled():
+                allowed, policy_msg = self.policy_engine.check_policy(src_file, dest)
+                if not allowed:
+                    blocked.append(rel_path)
+                    self.log.warning(f"DLP BLOCK: {src_file} - {policy_msg}")
+                    chain_logger.append_event("BLOCK", f"DLP Policy Violation: {src_file} - {policy_msg}")
+                    self.dlp_tracker.log_violation(src_file, policy_msg, "BLOCK", {"destination": dest})
+                    self.alert_system.send_alert("BLOCK", f"File transfer blocked: {os.path.basename(src_file)}\n{policy_msg}", 
+                                                {"file": src_file, "destination": dest}, self.root)
+                    self.progress["value"] = i
+                    self.status_label.config(text=f"Transferred {i}/{total_files} files (Blocked: {len(blocked)})", foreground="orange")
+                    self.root.update_idletasks()
+                    continue
+            
+            # Content Inspection
+            if self.content_inspector.is_inspection_enabled():
+                safe, inspect_msg, findings = self.content_inspector.inspect_content(src_file)
+                if not safe:
+                    blocked.append(rel_path)
+                    self.log.warning(f"DLP BLOCK: {src_file} - {inspect_msg}")
+                    chain_logger.append_event("BLOCK", f"DLP Content Violation: {src_file} - {inspect_msg}")
+                    self.dlp_tracker.log_violation(src_file, inspect_msg, "BLOCK", {"findings": findings})
+                    self.alert_system.send_alert("BLOCK", f"Sensitive data detected: {os.path.basename(src_file)}\n{inspect_msg}", 
+                                                {"file": src_file, "findings": findings}, self.root)
+                    self.progress["value"] = i
+                    self.status_label.config(text=f"Transferred {i}/{total_files} files (Blocked: {len(blocked)})", foreground="orange")
+                    self.root.update_idletasks()
+                    continue
+            
             try:
                 os.makedirs(os.path.dirname(dest_file), exist_ok=True)
             except Exception:
                 # possible when dest path points to a root or invalid location; treat as missing
-                missing.append(os.path.relpath(src_file, source))
+                missing.append(rel_path)
                 self.progress["value"] = i
                 self.status_label.config(text=f"Transferred {i}/{total_files} files", foreground="white")
                 self.root.update_idletasks()
                 continue
 
             try:
-                shutil.copy2(src_file, dest_file)
-
-                # Verify checksum
-                algo = self.config.get("checksum_algorithm", "sha256")
-                if not checksum_utils.compare_files(src_file, dest_file, algo):
-                    corrupted.append(os.path.relpath(src_file, source))
+                # Check if encryption is needed
+                should_encrypt = self.encryption_manager.should_encrypt_file(src_file, self.config)
+                if should_encrypt:
+                    # Encrypt before copying
+                    encrypted_path = self.encryption_manager.encrypt_file(src_file)
+                    shutil.copy2(encrypted_path, dest_file + ".encrypted")
+                    os.remove(encrypted_path)  # Clean up temp encrypted file
+                    dest_file = dest_file + ".encrypted"
+                    self.log.info(f"Encrypted file: {src_file}")
+                    # For encrypted files, verify the encrypted file integrity
+                    # (we can't compare original vs encrypted, so we verify encrypted file exists and is valid)
+                    if os.path.exists(dest_file) and os.path.getsize(dest_file) > 0:
+                        success_count += 1
+                    else:
+                        corrupted.append(rel_path)
                 else:
-                    success_count += 1
+                    shutil.copy2(src_file, dest_file)
+
+                    # Verify checksum (only for non-encrypted files)
+                    algo = self.config.get("checksum_algorithm", "sha256")
+                    if not checksum_utils.compare_files(src_file, dest_file, algo):
+                        corrupted.append(rel_path)
+                    else:
+                        success_count += 1
 
             except Exception as e:
                 # log exception details for debugging
                 self.log.error(f"Error copying {src_file} -> {dest_file}: {e}")
-                missing.append(os.path.relpath(src_file, source))
+                missing.append(rel_path)
 
             # Update progress bar
             self.progress["value"] = i
@@ -199,7 +265,9 @@ class FileTransferGUI:
         report_data = {}
         for src_file, _ in files:
             rel_path = os.path.relpath(src_file, source)
-            if rel_path in missing:
+            if rel_path in blocked:
+                report_data[rel_path] = "BLOCKED"
+            elif rel_path in missing:
                 report_data[rel_path] = "MISSING"
             elif rel_path in corrupted:
                 report_data[rel_path] = "CORRUPTED"
@@ -217,22 +285,23 @@ class FileTransferGUI:
         # Final summary
         summary = (
             f"✅ Successful: {success_count}\n"
+            f"🚫 Blocked (DLP): {len(blocked)}\n"
             f"⚠️ Corrupted: {len(corrupted)}\n"
             f"❌ Failed/Missing: {len(missing)}\n\n"
             f"Reports saved to:\n" + "\n".join(reports)
         )
 
         # update UI and log
-        status_color = "green" if len(corrupted) == 0 and len(missing) == 0 else ("orange" if len(corrupted) > 0 else "red")
+        status_color = "green" if len(corrupted) == 0 and len(missing) == 0 and len(blocked) == 0 else ("orange" if len(corrupted) > 0 or len(blocked) > 0 else "red")
         self.status_label.config(text="Transfer Complete", foreground=status_color)
         # log before showing popup to ensure persistence
-        self.log.info(f"Transfer Summary: Success={success_count}, Corrupted={len(corrupted)}, Missing={len(missing)}")
+        self.log.info(f"Transfer Summary: Success={success_count}, Blocked={len(blocked)}, Corrupted={len(corrupted)}, Missing={len(missing)}")
         messagebox.showinfo("Transfer Summary", summary)
 
         from src import chain_logger
         chain_logger.append_event(
         "INFO",
-        f"Transfer completed: Success={success_count}, Corrupted={len(corrupted)}, Missing={len(missing)}"
+        f"Transfer completed: Success={success_count}, Blocked={len(blocked)}, Corrupted={len(corrupted)}, Missing={len(missing)}"
         )
         if hasattr(self, "observer"):
             watchdog_monitor.stop_monitor(self.observer)
@@ -350,6 +419,11 @@ class FileTransferGUI:
         frame = self.settings_tab
 
         ttk.Label(frame, text="Settings", style="Header.TLabel").pack(pady=10, anchor="w", padx=10)
+        
+        # Role indicator
+        role_label = ttk.Label(frame, text=f"Current Role: {self.user_role.upper()}", 
+                               font=("Segoe UI", 9, "italic"), foreground="gray")
+        role_label.pack(pady=(0, 10), anchor="w", padx=10)
 
         # ----- Checksum Algorithm -----
         ttk.Label(frame, text="Select Checksum Algorithm:").pack(pady=(6, 2), anchor="w", padx=10)
@@ -396,6 +470,47 @@ class FileTransferGUI:
 
         # Save button
         ttk.Button(frame, text="Save Settings", command=self.save_settings).pack(pady=12, padx=10, anchor="w")
+        
+        # DLP Settings (Admin only)
+        if self.user_role == "admin":
+            ttk.Separator(frame, orient="horizontal").pack(fill="x", padx=10, pady=(20, 10))
+            ttk.Label(frame, text="DLP Policy Settings (Admin Only)", style="Header.TLabel").pack(pady=(10, 5), anchor="w", padx=10)
+            
+            # DLP Enabled checkbox
+            self.dlp_enabled_var = tk.BooleanVar(value=self.config.get("dlp_policies", {}).get("enabled", False))
+            ttk.Checkbutton(frame, text="Enable DLP Policies", variable=self.dlp_enabled_var).pack(pady=5, padx=10, anchor="w")
+            
+            # Content Inspection checkbox
+            self.content_inspection_var = tk.BooleanVar(value=self.config.get("content_inspection", {}).get("enabled", False))
+            ttk.Checkbutton(frame, text="Enable Content Inspection", variable=self.content_inspection_var).pack(pady=5, padx=10, anchor="w")
+            
+            # Encryption checkbox
+            self.encryption_enabled_var = tk.BooleanVar(value=self.config.get("encryption", {}).get("enabled", False))
+            ttk.Checkbutton(frame, text="Enable Encryption for Sensitive Files", variable=self.encryption_enabled_var).pack(pady=5, padx=10, anchor="w")
+            
+            # Desktop notifications checkbox
+            self.desktop_notifications_var = tk.BooleanVar(value=self.config.get("alerts", {}).get("desktop_notifications", True))
+            ttk.Checkbutton(frame, text="Enable Desktop Notifications", variable=self.desktop_notifications_var).pack(pady=5, padx=10, anchor="w")
+            
+            ttk.Button(frame, text="Save DLP Settings", command=self.save_dlp_settings).pack(pady=12, padx=10, anchor="w")
+        
+        # Test Files Reset Buttons
+        ttk.Separator(frame, orient="horizontal").pack(fill="x", padx=10, pady=(20, 10))
+        ttk.Label(frame, text="Test Files Management", style="Header.TLabel").pack(pady=(10, 5), anchor="w", padx=10)
+        
+        # DLP Test Files
+        ttk.Label(frame, text="DLP Test Files (for DLP demo)", 
+                  font=("Segoe UI", 9, "bold")).pack(pady=(5, 2), anchor="w", padx=10)
+        ttk.Label(frame, text="Resets test_dlp_src and test_dlp_dst for DLP policy testing", 
+                  font=("Segoe UI", 9), foreground="gray").pack(pady=(0, 5), anchor="w", padx=10)
+        ttk.Button(frame, text="🔄 Reset DLP Test Files", command=self.reset_test_files).pack(pady=5, padx=10, anchor="w")
+        
+        # Integrity Test Files
+        ttk.Label(frame, text="Integrity Test Files (for checksum validation)", 
+                  font=("Segoe UI", 9, "bold")).pack(pady=(15, 2), anchor="w", padx=10)
+        ttk.Label(frame, text="Resets tests/test_data/src and test_transfer for integrity/checksum testing", 
+                  font=("Segoe UI", 9), foreground="gray").pack(pady=(0, 5), anchor="w", padx=10)
+        ttk.Button(frame, text="🔄 Reset Integrity Test Files", command=self.reset_integrity_test_files).pack(pady=5, padx=10, anchor="w")
 
         # Status
         current = f"Algorithm: {self.checksum_var.get()}, Reports: {', '.join(self.config.get('report_formats', []))}"
@@ -459,6 +574,112 @@ class FileTransferGUI:
         )
 
         messagebox.showinfo("Settings Saved", f"Saved algorithm={new_algo}, reports={', '.join(selected_formats)}")
+    
+    def save_dlp_settings(self):
+        """Save DLP settings (admin only)."""
+        if self.user_role != "admin":
+            messagebox.showerror("Access Denied", "Only administrators can modify DLP settings.")
+            return
+        
+        # Update DLP policies
+        if "dlp_policies" not in self.config:
+            self.config["dlp_policies"] = {}
+        self.config["dlp_policies"]["enabled"] = self.dlp_enabled_var.get()
+        
+        # Update content inspection
+        if "content_inspection" not in self.config:
+            self.config["content_inspection"] = {}
+        self.config["content_inspection"]["enabled"] = self.content_inspection_var.get()
+        
+        # Update encryption
+        if "encryption" not in self.config:
+            self.config["encryption"] = {}
+        self.config["encryption"]["enabled"] = self.encryption_enabled_var.get()
+        
+        # Update alerts
+        if "alerts" not in self.config:
+            self.config["alerts"] = {}
+        self.config["alerts"]["desktop_notifications"] = self.desktop_notifications_var.get()
+        
+        # Reinitialize DLP components with new config
+        self.policy_engine = policy_engine.PolicyEngine(self.config)
+        self.content_inspector = content_inspector.ContentInspector(self.config)
+        self.alert_system = alert_system.AlertSystem(self.config)
+        
+        # Save to file
+        try:
+            config_manager.save_config(self.config)
+            messagebox.showinfo("DLP Settings Saved", "DLP settings have been updated successfully.")
+            self.log.info("DLP settings updated by admin")
+        except Exception as e:
+            self.log.error(f"Failed to save DLP config: {e}")
+            messagebox.showerror("Error", "Failed to save DLP settings.")
+    
+    def reset_test_files(self):
+        """Reset DLP test files for fresh demo."""
+        import subprocess
+        import sys
+        
+        # Confirm action
+        if not messagebox.askyesno("Reset DLP Test Files", 
+                                   "This will remove and recreate test_dlp_src and test_dlp_dst directories.\n\n"
+                                   "Continue?"):
+            return
+        
+        try:
+            # Run the reset command
+            result = subprocess.run(
+                [sys.executable, "test_dlp.py", "reset"],
+                capture_output=True,
+                text=True,
+                cwd=os.getcwd()
+            )
+            
+            if result.returncode == 0:
+                messagebox.showinfo("Success", "DLP test files have been reset successfully!\n\n"
+                                              "You can now run a fresh DLP demo.")
+                self.log.info("DLP test files reset from GUI")
+            else:
+                messagebox.showerror("Error", f"Failed to reset DLP test files:\n{result.stderr}")
+                self.log.error(f"DLP test files reset failed: {result.stderr}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to reset DLP test files:\n{str(e)}")
+            self.log.error(f"DLP test files reset exception: {e}")
+    
+    def reset_integrity_test_files(self):
+        """Reset integrity test files for fresh checksum validation testing."""
+        import subprocess
+        import sys
+        
+        # Confirm action
+        if not messagebox.askyesno("Reset Integrity Test Files", 
+                                   "This will remove and recreate test files in:\n"
+                                   "- tests/test_data/src\n"
+                                   "- test_transfer\n\n"
+                                   "Continue?"):
+            return
+        
+        try:
+            # Run the reset command
+            result = subprocess.run(
+                [sys.executable, "setup_integrity_tests.py", "reset"],
+                capture_output=True,
+                text=True,
+                cwd=os.getcwd()
+            )
+            
+            if result.returncode == 0:
+                messagebox.showinfo("Success", "Integrity test files have been reset successfully!\n\n"
+                                              "You can now test checksum validation:\n"
+                                              "Source: tests/test_data/src\n"
+                                              "Destination: test_transfer")
+                self.log.info("Integrity test files reset from GUI")
+            else:
+                messagebox.showerror("Error", f"Failed to reset integrity test files:\n{result.stderr}")
+                self.log.error(f"Integrity test files reset failed: {result.stderr}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to reset integrity test files:\n{str(e)}")
+            self.log.error(f"Integrity test files reset exception: {e}")
 
     # ---------------- LOGS TAB ----------------
     def build_logs_tab(self):
@@ -473,10 +694,20 @@ class FileTransferGUI:
         btn_frame.pack(pady=(0, 10), padx=10, anchor="w")
         ttk.Button(btn_frame, text="🔄 Refresh Logs", command=self.load_logs).pack(side="left")
         ttk.Button(btn_frame, text="📁 Open Log Folder", command=self.open_log_folder).pack(side="left", padx=8)
+        ttk.Button(btn_frame, text="🔗 Verify Chain", command=self.verify_chain_integrity).pack(side="left", padx=8)
 
         # Load logs once at startup
         self.load_logs()
 
+    def verify_chain_integrity(self):
+        from src import chain_logger
+        ok, message = chain_logger.verify_chain()
+        if ok:
+            messagebox.showinfo("Chain Verification", f"✅ {message}")
+            self.log.info(f"Chain verification success: {message}")
+        else:
+            messagebox.showerror("Chain Verification", f"❌ {message}")
+            self.log.error(f"Chain verification failed: {message}")
     def load_logs(self):
         try:
             with open("logs/app.log", "r") as f:
@@ -503,6 +734,117 @@ class FileTransferGUI:
             # fallback: message with path
             messagebox.showinfo("Logs Folder", f"Logs are at: {folder}")
 
+    # ---------------- DLP DASHBOARD TAB ----------------
+    def build_dlp_tab(self):
+        frame = self.dlp_tab
+        
+        ttk.Label(frame, text="DLP Dashboard", style="Header.TLabel").pack(pady=8, anchor="w", padx=10)
+        
+        # Statistics frame
+        stats_frame = ttk.Frame(frame)
+        stats_frame.pack(fill="x", padx=10, pady=(0, 10))
+        
+        self.dlp_stats_label = ttk.Label(stats_frame, text="Loading statistics...", font=("Segoe UI", 10))
+        self.dlp_stats_label.pack(anchor="w")
+        
+        # Violations list
+        ttk.Label(frame, text="Recent Violations:", font=("Segoe UI", 11, "bold")).pack(pady=(10, 5), anchor="w", padx=10)
+        
+        # Treeview for violations
+        tree_frame = ttk.Frame(frame)
+        tree_frame.pack(expand=True, fill="both", padx=10, pady=(0, 10))
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(tree_frame)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Treeview
+        self.violations_tree = ttk.Treeview(
+            tree_frame,
+            columns=("Timestamp", "File", "Type", "Reason"),
+            show="headings",
+            yscrollcommand=scrollbar.set,
+            height=15
+        )
+        scrollbar.config(command=self.violations_tree.yview)
+        
+        # Configure columns
+        self.violations_tree.heading("Timestamp", text="Timestamp")
+        self.violations_tree.heading("File", text="File")
+        self.violations_tree.heading("Type", text="Type")
+        self.violations_tree.heading("Reason", text="Reason")
+        
+        self.violations_tree.column("Timestamp", width=180)
+        self.violations_tree.column("File", width=300)
+        self.violations_tree.column("Type", width=80)
+        self.violations_tree.column("Reason", width=400)
+        
+        self.violations_tree.pack(side="left", fill="both", expand=True)
+        
+        # Buttons
+        btn_frame = ttk.Frame(frame)
+        btn_frame.pack(pady=(0, 10), padx=10, anchor="w")
+        ttk.Button(btn_frame, text="🔄 Refresh", command=self.refresh_dlp_dashboard).pack(side="left")
+        if self.user_role == "admin":
+            ttk.Button(btn_frame, text="🗑️ Clear All", command=self.clear_dlp_violations).pack(side="left", padx=8)
+        
+        # Load initial data
+        self.refresh_dlp_dashboard()
+    
+    def refresh_dlp_dashboard(self):
+        """Refresh DLP dashboard with latest violations."""
+        stats = self.dlp_tracker.get_statistics()
+        stats_text = (
+            f"Total Violations: {stats['total']} | "
+            f"Blocks: {stats['blocks']} | "
+            f"Warnings: {stats['warnings']} | "
+            f"Today: {stats['today']}"
+        )
+        self.dlp_stats_label.config(text=stats_text)
+        
+        # Clear existing items
+        for item in self.violations_tree.get_children():
+            self.violations_tree.delete(item)
+        
+        # Load recent violations
+        violations = self.dlp_tracker.get_recent_violations(limit=100)
+        for violation in reversed(violations):  # Show newest first
+            timestamp = violation.get("timestamp", "")
+            # Format timestamp for display
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp)
+                timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+            except Exception:
+                pass
+            
+            filepath = violation.get("filepath", "")
+            # Show only filename if path is too long
+            if len(filepath) > 50:
+                filepath = "..." + filepath[-47:]
+            
+            violation_type = violation.get("type", "UNKNOWN")
+            reason = violation.get("reason", "")
+            if len(reason) > 60:
+                reason = reason[:57] + "..."
+            
+            self.violations_tree.insert(
+                "",
+                "end",
+                values=(timestamp, filepath, violation_type, reason)
+            )
+    
+    def clear_dlp_violations(self):
+        """Clear all DLP violations (admin only)."""
+        if self.user_role != "admin":
+            messagebox.showerror("Access Denied", "Only administrators can clear violations.")
+            return
+        
+        if messagebox.askyesno("Confirm", "Are you sure you want to clear all DLP violations?"):
+            self.dlp_tracker.clear_violations()
+            self.refresh_dlp_dashboard()
+            messagebox.showinfo("Success", "All violations cleared.")
+            self.log.info("DLP violations cleared by admin")
 
 if __name__ == "__main__":
     root = tk.Tk()

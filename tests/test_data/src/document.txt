@@ -1,0 +1,2 @@
+A document file for testing data integrity.
+This should transfer correctly.
